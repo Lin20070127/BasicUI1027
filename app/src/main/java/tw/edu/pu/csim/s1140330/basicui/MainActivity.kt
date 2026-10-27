@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -19,6 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -55,38 +58,94 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// 1. 定義 Animal 資料模型
+data class Animal(
+    val name: String,
+    @DrawableRes val imageRes: Int
+)
+
 @Composable
 fun Main(modifier: Modifier = Modifier) {
-    Box() {
-        LazyColumnExample(modifier)
-        ColumnExample(modifier)
-        TextFieldExample(modifier)
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumnExample()
+        ColumnExample()
+
+        // 將 LazyRow 置於畫面中，可自由調整位置與排列
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            LazyRowExample()
+        }
+
+        TextFieldExample()
+    }
+}
+
+// 2. 新增 LazyRowExample 元件 (水平滑動)
+@Composable
+fun LazyRowExample(modifier: Modifier = Modifier) {
+    val animals = listOf(
+        Animal("鴨子", R.drawable.animal0),
+        Animal("企鵝", R.drawable.animal1),
+        Animal("青蛙", R.drawable.animal2),
+        Animal("貓頭鷹", R.drawable.animal3),
+        Animal("海豚", R.drawable.animal4),
+        Animal("牛", R.drawable.animal5),
+        Animal("無尾熊", R.drawable.animal6),
+        Animal("獅子", R.drawable.animal7),
+        Animal("狐狸", R.drawable.animal8),
+        Animal("小雞", R.drawable.animal9)
+    )
+
+    LazyRow(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp), // 控制項目間距
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        items(animals) { animal ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = animal.imageRes),
+                    contentDescription = animal.name,
+                    modifier = Modifier.size(80.dp)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = animal.name)
+            }
+        }
     }
 }
 
 @Composable
 fun LazyColumnExample(modifier: Modifier = Modifier) {
-    LazyColumn(modifier = modifier
-        .fillMaxSize(),
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item { Text("標題列") }
-        items(count = 50){ index ->
+        items(count = 50) { index ->
             Text("$index")
         }
         item { Text("結尾列") }
     }
-
 }
+
 @Composable
 fun ColumnExample(modifier: Modifier = Modifier) {
-    var  msg by remember { mutableStateOf(value = "")}
-    Column (
+    var msg by remember { mutableStateOf("") }
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0x8AE0BBE4))
-            .pointerInput( key1 = Unit){
+            .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { msg = "短按" },
                     onDoubleTap = { msg = "連按兩下" },
@@ -95,15 +154,16 @@ fun ColumnExample(modifier: Modifier = Modifier) {
             },
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         Text("行動應用軟體開發：基本元件")
         Text("作者：林籐憑")
-        Text( msg )
+        Text(msg)
 
         Spacer(modifier = Modifier.height(30.dp))
         RowExample(modifier)
     }
 }
+
 @Composable
 fun RowExample(modifier: Modifier = Modifier) {
     Row {
@@ -127,10 +187,8 @@ fun RowExample(modifier: Modifier = Modifier) {
     }
 }
 
-
 @Composable
 fun TextFieldExample(modifier: Modifier = Modifier) {
-    // 管理輸入框的文字狀態
     var inputText by remember { mutableStateOf("") }
 
     Column(
