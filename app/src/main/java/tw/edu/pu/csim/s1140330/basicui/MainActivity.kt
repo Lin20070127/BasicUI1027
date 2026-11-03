@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,13 +58,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-// 1. 定義 Animal 資料模型
-data class Animal(
-    val name: String,
-    @DrawableRes val imageRes: Int
-)
-
 @Composable
 fun Main(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -83,45 +77,6 @@ fun Main(modifier: Modifier = Modifier) {
     }
 }
 
-// 2. 新增 LazyRowExample 元件 (水平滑動)
-@Composable
-fun LazyRowExample(modifier: Modifier = Modifier) {
-    val animals = listOf(
-        Animal("鴨子", R.drawable.animal0),
-        Animal("企鵝", R.drawable.animal1),
-        Animal("青蛙", R.drawable.animal2),
-        Animal("貓頭鷹", R.drawable.animal3),
-        Animal("海豚", R.drawable.animal4),
-        Animal("牛", R.drawable.animal5),
-        Animal("無尾熊", R.drawable.animal6),
-        Animal("獅子", R.drawable.animal7),
-        Animal("狐狸", R.drawable.animal8),
-        Animal("小雞", R.drawable.animal9)
-    )
-
-    LazyRow(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp), // 控制項目間距
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        items(animals) { animal ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = animal.imageRes),
-                    contentDescription = animal.name,
-                    modifier = Modifier.size(80.dp)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = animal.name)
-            }
-        }
-    }
-}
 
 @Composable
 fun LazyColumnExample(modifier: Modifier = Modifier) {
@@ -144,7 +99,7 @@ fun ColumnExample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0x8AE0BBE4))
+            .background(Color(0xFFE0BBE4))
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { msg = "短按" },
@@ -209,5 +164,50 @@ fun TextFieldExample(modifier: Modifier = Modifier) {
         Text(
             text = if (inputText.isBlank()) "尚未輸入內容" else "您輸入的是：$inputText"
         )
+    }
+}
+
+
+data class Animal(
+    val name: String,
+    @DrawableRes val imageRes: Int
+)
+
+@Composable
+fun LazyRowExample(modifier: Modifier = Modifier) {
+    val animals = listOf(
+        Animal("鴨子", R.drawable.animal0),
+        Animal("企鵝", R.drawable.animal1),
+        Animal("青蛙", R.drawable.animal2),
+        Animal("貓頭鷹", R.drawable.animal3),
+        Animal("海豚", R.drawable.animal4),
+        Animal("牛", R.drawable.animal5),
+        Animal("無尾熊", R.drawable.animal6),
+        Animal("獅子", R.drawable.animal7),
+        Animal("狐狸", R.drawable.animal8),
+        Animal("小雞", R.drawable.animal9)
+    )
+    LazyRow(
+        modifier = Modifier.fillMaxHeight(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 直接傳入 animals 清單，每個迴圈拿到一個 animal 物件
+        items(animals) { animal ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Image(
+                    painter = painterResource(id = animal.imageRes),
+                    contentDescription = animal.name,
+                    modifier = Modifier.size(150.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "${animal.name}"
+                )
+            }
+        }
     }
 }
