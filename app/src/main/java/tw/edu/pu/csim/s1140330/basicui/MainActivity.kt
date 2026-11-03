@@ -27,15 +27,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,22 +76,31 @@ class MainActivity : ComponentActivity() {
 }
 @Composable
 fun Main(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize()) {
-        LazyColumnExample()
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // 1. 包含標題、作者、小圖片、影片與按鈕的完整區塊
         ColumnExample()
-        SimpleVideoPlayer(R.raw.love)
-        // 將 LazyRow 置於畫面中，可自由調整位置與排列
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+
+        // 2. 橫向動物清單
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(260.dp)
         ) {
             LazyRowExample()
         }
 
+        // 3. 下方的文字輸入框
         TextFieldExample()
     }
 }
+
 
 
 @Composable
@@ -108,10 +121,14 @@ fun LazyColumnExample(modifier: Modifier = Modifier) {
 @Composable
 fun ColumnExample(modifier: Modifier = Modifier) {
     var msg by remember { mutableStateOf("") }
+    // 建立狀態來記錄目前選擇的影片資源，預設為 love
+    var currentVideo by remember { mutableStateOf(R.raw.love) }
+
     Column(
         modifier = modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .background(Color(0xFFE0BBE4))
+            .padding(16.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { msg = "短按" },
@@ -122,15 +139,35 @@ fun ColumnExample(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // 1. 標題與作者文字 (不被蓋住)
         Text("行動應用軟體開發：基本元件")
         Text("作者：林籐憑")
         Text(msg)
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 2. 小圖片 (保留且完整顯示，絕對不被蓋住)
         RowExample(modifier)
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 3. 影片播放器 (接在小圖片下方順順往下排)
+        SimpleVideoPlayer(videoRes = currentVideo)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 4. 切換影片按鈕
+        Button(onClick = {
+            currentVideo = if (currentVideo == R.raw.love) {
+                R.raw.handpan
+            } else {
+                R.raw.love
+            }
+        }) {
+            Text(text = if (currentVideo == R.raw.love) "切換至 handpan 影片" else "切換至 love 影片")
+        }
     }
 }
-
 @Composable
 fun RowExample(modifier: Modifier = Modifier) {
     Row {
@@ -251,25 +288,26 @@ fun SimpleVideoPlayer(
 ) {
     val context = LocalContext.current
 
-    // 建立並記住 ExoPlayer 實體，設定影片路徑與自動播放
+    // 1. 只建立 ExoPlayer 實體
     val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            val uri = "android.resource://${context.packageName}/$videoRes"
-            setMediaItem(MediaItem.fromUri(uri))
-            prepare()
-            playWhenReady = true // 載入完成自動播放
-        }
+        ExoPlayer.Builder(context).build()
+    }
+
+    // 2. ⭐ 這裡最重要：當 videoRes 改變時，自動切換影片並重新播放
+    LaunchedEffect(videoRes) {
+        val uri = "android.resource://${context.packageName}/$videoRes"
+        exoPlayer.setMediaItem(MediaItem.fromUri(uri))
+        exoPlayer.prepare()
+        exoPlayer.playWhenReady = true
     }
 
     // 利用 DisposableEffect 管理生命週期
-    // 離開畫面時自動釋放記憶體
     DisposableEffect(Unit) {
         onDispose {
-            exoPlayer.release() // 💡 釋放播放器資源
+            exoPlayer.release()
         }
     }
 
-    //將原生的 PlayerView 嵌入 Compose
     AndroidView(
         factory = { ctx ->
             PlayerView(ctx).apply {
